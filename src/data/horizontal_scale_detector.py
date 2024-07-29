@@ -1,38 +1,22 @@
 import cv2
-import matplotlib.pyplot as plt
 from ultralytics import YOLO
 import os
 import warnings
+from helper.plot_detections import plot_one_box
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-model = YOLO("src/models/scale_detector.pt")
-
-# Single image path to detect horizontal scales
-image_path = "public/images/Class 1/PDF 3_1.png"
-output_dir = "public/horizontal_scales"
-
-def detect_and_save_horizontal(image_path, model, output_dir, add_padding=False):
+def detect_and_save_horizontal(image_path, model_path, output_dir, add_padding=False):
     print(f"Processing image: {image_path}")
 
+    model = YOLO(model_path)
     image = cv2.imread(image_path)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     results = model(image_rgb)
     detections = results[0].boxes.data.cpu().numpy()
 
-    def plot_one_box(x, img, color=None, label=None, line_thickness=None):
-        tl = line_thickness or round(0.002 * max(img.shape[0:2])) + 1
-        color = color or [255, 0, 0]
-        c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
-        cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
-        if label:
-            tf = max(tl - 1, 1)
-            t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
-            c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
-            cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)
-            cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
-
+    # Delete all the existing images and store newer detected ones
     if os.path.isdir(output_dir):
         print(f"Clearing output directory: {output_dir}")
         for file in os.listdir(output_dir):
@@ -53,11 +37,11 @@ def detect_and_save_horizontal(image_path, model, output_dir, add_padding=False)
             horizontal_scales.append((xmin, ymin, xmax, ymax))
 
     for idx, (xmin, ymin, xmax, ymax) in enumerate(horizontal_scales):
+        # Adding padding horizontally for better processing later
         if add_padding:
             padding = 30
             xmin = max(0, xmin - padding)
             xmax = min(image_rgb.shape[1], xmax + padding)
-            # ymin and ymax remain unchanged to add padding only on left and right sides
         
         rect_image = image_rgb[ymin:ymax, xmin:xmax]
 
@@ -71,5 +55,8 @@ def detect_and_save_horizontal(image_path, model, output_dir, add_padding=False)
     cv2.imwrite(output_path, cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR))
     print(f"Saved annotated image with horizontal scales: {output_path}")
 
-# Detect and save horizontal scales from the single image
-detect_and_save_horizontal(image_path, model, output_dir, add_padding=True)
+if __name__ == "__main__":
+    image_path = "public/images/Class 1/PDF 3_1.png"
+    model_path = "src/models/scale_detector.pt"
+    output_dir = "public/horizontal_scales"
+    detect_and_save_horizontal(image_path, model_path, output_dir, add_padding=True)
