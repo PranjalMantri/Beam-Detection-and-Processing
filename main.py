@@ -4,6 +4,7 @@ from src.detection.horizontal_scale_detector import detect_and_save_horizontal
 from src.detection.vertical_scale_detector import  detect_and_save_vertical
 from src.detection.color_comp import get_colors
 from src.detection.detect_roi import create_image_mask
+from src.data.bars import process_image
 
 pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
 
@@ -13,14 +14,14 @@ beams = detect_beams(image_path)
 horizontal_scale = detect_and_save_horizontal(image_path)
 vertical_scale = detect_and_save_vertical(image_path)
 
-if beams:
-    print(f"Beams were detected successfully")
+if not beams:
+    print("Something went wrong while detecting beams")
 
-if horizontal_scale:
-    print("Horizontal scales were detected successfully")
+if not horizontal_scale:
+    print("Something went wrong while detecing horizontal scale")
 
-if vertical_scale:
-    print("Vertical scales were detected successfully")
+if not vertical_scale:
+    print("Something went wrong while detecting vertical scale")
 
 colors, _ = get_colors(image_path)
 
@@ -38,10 +39,14 @@ while True:
     else:
         break
 
-print(f"Beam colour is {beam_colour}")
-print(f"Column colour is {column_colour}")
+# print(f"Beam colour is {beam_colour}")
+# print(f"Column colour is {column_colour}")
 
 sample_beam_image = "public/Beams/beam_1.png"
 
 coloured_beam = create_image_mask(sample_beam_image, beam_colour.lower(), output_dir="public/beam-image")
 coloured_column = create_image_mask(sample_beam_image, column_colour.lower(), output_dir="public/column-image")
+
+bar_info = process_image(coloured_beam)
+
+print(bar_info)

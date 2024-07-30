@@ -45,7 +45,7 @@ def create_image_mask(image_path, color, output_dir="public/roi"):
     write = cv2.imwrite(output_image_path, cropped_color_only)
     
     if write:
-        print(f"Saved the image at {output_image_path}")
+        # print(f"Saved the image at {output_image_path}")
         return output_image_path
     
     return False
