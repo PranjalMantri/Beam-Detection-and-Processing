@@ -2,6 +2,7 @@ from src.detection.beam_segmentor import detect_beams
 from src.pdf_to_image.pdf_to_image import pdf_to_image
 from src.detection.horizontal_scale_detector import detect_and_save_horizontal
 from src.detection.vertical_scale_detector import  detect_and_save_vertical
+from src.detection.color_comp import get_colors
 
 pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
 
@@ -19,3 +20,8 @@ if horizontal_scale:
 
 if vertical_scale:
     print("Vertical scales were detected successfully")
+
+colors, _ = get_colors(image_path)
+
+if colors:
+    print("These are the most prominent colors in the image: ", *list(set(colors)))
