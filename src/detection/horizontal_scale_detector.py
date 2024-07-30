@@ -2,11 +2,11 @@ import cv2
 from ultralytics import YOLO
 import os
 import warnings
-from helper.plot_detections import plot_one_box
+from src.detection.helper.plot_detections import plot_one_box
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-def detect_and_save_horizontal(image_path, model_path, output_dir, add_padding=False):
+def detect_and_save_horizontal(image_path, model_path="src/models/scale_detector.pt", output_dir="public/horizontal_scales", add_padding=False):
     print(f"Processing image: {image_path}")
 
     model = YOLO(model_path)
@@ -54,6 +54,8 @@ def detect_and_save_horizontal(image_path, model_path, output_dir, add_padding=F
     output_path = os.path.join(output_dir, 'horizontal_scale_annotated.png')
     cv2.imwrite(output_path, cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR))
     print(f"Saved annotated image with horizontal scales: {output_path}")
+
+    return True
 
 if __name__ == "__main__":
     image_path = "public/images/Class 1/PDF 3_1.png"

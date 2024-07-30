@@ -1,7 +1,7 @@
 import fitz  # PyMuPDF
 import os
 
-def pdf_to_image(pdf_path, output_dir, dpi=300):
+def pdf_to_image(pdf_path, output_dir="public/test-image", dpi=300):
     """
     Converts a one-page PDF to an image while maintaining high quality and preserving the PDF's name.
 
@@ -35,12 +35,16 @@ def pdf_to_image(pdf_path, output_dir, dpi=300):
     output_image_path = os.path.join(output_dir, f"{pdf_name}.png")
 
     # Save the image
+    print(output_image_path)
     pix.save(output_image_path)
     print(f'Image saved to {output_image_path}')
 
+    return output_image_path
 
-pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
-# TODO: Add Proper output directory pathh
-output_dir = ""
 
-pdf_to_image(pdf_path, output_dir, dpi=400)
+if __name__ == "__main__":
+    pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
+    # TODO: Add Proper output directory pathh
+    output_dir = ""
+
+    pdf_to_image(pdf_path, output_dir, dpi=400)

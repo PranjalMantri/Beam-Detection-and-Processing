@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 from ultralytics import YOLO
 import os
 import warnings
-from helper.nms import calculate_intersection_over_union, merge_rectangles
-from helper.plot_detections import plot_one_box
+from src.detection.helper.nms import calculate_intersection_over_union, merge_rectangles
+from src.detection.helper.plot_detections import plot_one_box
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-def process_image(image_path, model_path):
+def detect_beams(image_path, model_path="src/models/beam_detector.pt"):
     model = YOLO(model_path)
 
     image = cv2.imread(image_path)
@@ -79,7 +79,9 @@ def process_image(image_path, model_path):
     print(f"Detected and saved {len(beams)} beams and {len(vertical_scales)} vertical scales.")
     print(f"Annotated image saved as {output_path}")
 
+    return True
+
 if __name__ == "__main__":
     image_path = "public/images/Class 1/PDF 3_1.png"
-    model_path = "src/models/beam_detector.pt"
-    process_image(image_path, model_path)
+    # model_path = "src/models/beam_detector.pt"
+    detect_beams(image_path)

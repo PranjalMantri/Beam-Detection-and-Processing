@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import os
 import warnings
 import re
-from helper.plot_detections import plot_one_box
+from src.detection.helper.plot_detections import plot_one_box
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -13,7 +13,7 @@ def get_next_file_number(directory):
     numbers = [int(re.search(r'vertical_scale_(\d+)', f).group(1)) for f in existing_files if re.search(r'vertical_scale_(\d+)', f)]
     return max(numbers) + 1 if numbers else 0
 
-def detect_and_save_vertical(image_path, model_path, output_dir, add_padding=False):
+def detect_and_save_vertical(image_path, model_path="src/models/scale_detector.pt", output_dir="public/vertical_scales", add_padding=False):
     print(f"Processing image: {image_path}")
 
     model = YOLO(model_path)
@@ -57,7 +57,8 @@ def detect_and_save_vertical(image_path, model_path, output_dir, add_padding=Fal
     cv2.imwrite(output_path, cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR))
     print(f"Saved annotated image with vertical scales: {output_path}")
 
-# Example usage for testing
+    return True
+
 if __name__ == "__main__":
     image_path = "public/images/Class 1/PDF 3_1.png"
     model_path = "src/models/scale_detector.pt"
