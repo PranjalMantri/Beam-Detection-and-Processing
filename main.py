@@ -1,10 +1,14 @@
-from src.detection.beam_segmentor import detect_beams
 from src.pdf_to_image.pdf_to_image import pdf_to_image
+from src.detection.beam_segmentor import detect_beams
 from src.detection.horizontal_scale_detector import detect_and_save_horizontal
 from src.detection.vertical_scale_detector import  detect_and_save_vertical
 from src.detection.color_comp import get_colors
 from src.detection.detect_roi import create_image_mask
 from src.data.bars import process_image
+from src.scale.get_vertical_scale import get_vertical_scale
+from src.scale.get_horizontal_scale import get_horizontal_scale
+from src.scale.parse_measurement_text import parse_measurement
+
 
 pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
 
@@ -39,10 +43,20 @@ while True:
     else:
         break
 
-# print(f"Beam colour is {beam_colour}")
-# print(f"Column colour is {column_colour}")
 
 sample_beam_image = "public/Beams/beam_1.png"
+
+vertical_line_length, vertical_scale_text = get_vertical_scale()
+horizontal_line_length, horizontal_scale_text = get_horizontal_scale()
+
+print(f"{vertical_scale_text[0][0]}: ")
+print(f"{horizontal_scale_text[0][0]}: ")
+
+vertical_scale_in_inches = parse_measurement(vertical_scale_text[0][0])
+horizontal_scale_in_inches = parse_measurement(horizontal_scale_text[0][0])
+
+print(f"{vertical_scale_text}: {vertical_scale_in_inches} inches")
+print(f"{horizontal_scale_text}: {horizontal_scale_in_inches} inches")
 
 coloured_beam = create_image_mask(sample_beam_image, beam_colour.lower(), output_dir="public/beam-image")
 coloured_column = create_image_mask(sample_beam_image, column_colour.lower(), output_dir="public/column-image")

@@ -20,7 +20,7 @@ def preprocess_image(image_path):
     image[mask > 0] = [255, 255, 255]  # Convert non-gray areas to white
     
     # Display the image for debugging purposes
-    cv2.imshow('Processed Image', image)
+    # cv2.imshow('Processed Image', image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
@@ -74,7 +74,7 @@ def detect_symbols(roi):
             return "'"
     return ""
 
-def get_horizontal_scale(image_path):
+def get_horizontal_scale(image_path="public/horizontal_scales/horizontal_scale_2.png"):
     processed_image = preprocess_image(image_path)
     longest_line = find_longest_horizontal_line(processed_image)
     
@@ -85,7 +85,6 @@ def get_horizontal_scale(image_path):
     if longest_line:
         x1, y1, x2, y2 = longest_line
         line_length = abs(x2 - x1)
-        print(f"The longest horizontal line is from ({x1}, {y1}) to ({x2}, {y2}) with length {line_length} pixels.")
         
         # Draw the line on the processed image
         cv2.line(processed_image, (x1, y1), (x2, y2), (0, 0, 255), 2)  # Red line
@@ -93,18 +92,18 @@ def get_horizontal_scale(image_path):
         # Save the image with the line drawn
         output_path = os.path.splitext(image_path)[0] + '_with_line.png'
         cv2.imwrite(output_path, processed_image)
-        print(f"Image with detected line saved as {output_path}")
         
         # Display the image
-        cv2.imshow('Longest Horizontal Line', processed_image)
+        # cv2.imshow('Longest Horizontal Line', processed_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-    else:
-        print("No horizontal line detected.")
+    # else:
+    #     print("No horizontal line detected.")
     
     text_results = read_text(gray_image)
 
     detected_texts = []
+
     if not text_results:
         print("Could not read any text")
 
@@ -113,7 +112,6 @@ def get_horizontal_scale(image_path):
         bottom_right = tuple(result[0][2])
         text = result[1]
         confidence = result[2]
-        print(f"Detected text: {text} with confidence {confidence}")
         
         # Expand the bounding box
         expanded_top_left = (max(top_left[0] - 10, 0), max(top_left[1] - 10, 0))
@@ -124,22 +122,22 @@ def get_horizontal_scale(image_path):
         
         # Detect symbols
         symbol = detect_symbols(roi)
-        
-        # Include the detected symbol in the text
+
         if symbol:
-            text += symbol
+            if text[-1] in {'"', "'"}:
+                text = text[:-1] + symbol
+            else:
+                text += symbol
         
         detected_texts.append((text, confidence))
-        print(f"Detected text with symbols: {text} with confidence {confidence}")
         
         cv2.rectangle(processed_image, top_left, bottom_right, (0, 255, 0), 2)
     
     # Save and display the image with rectangles
     output_text_path = os.path.splitext(image_path)[0] + '_with_text.png'
     cv2.imwrite(output_text_path, processed_image)
-    print(f"Image with detected text saved as {output_text_path}")
     
-    cv2.imshow('Detected Text', processed_image)
+    # cv2.imshow('Detected Text', processed_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 

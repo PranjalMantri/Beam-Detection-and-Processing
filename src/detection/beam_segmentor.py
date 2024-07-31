@@ -76,8 +76,6 @@ def detect_beams(image_path, model_path="src/models/beam_detector.pt"):
     output_path = 'public/beams_and_scales.png'
     cv2.imwrite(output_path, cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR))
 
-    # print(f"Detected and saved {len(beams)} beams and {len(vertical_scales)} vertical scales.")
-    # print(f"Annotated image saved as {output_path}")
 
     return True
 

@@ -34,10 +34,7 @@ def pdf_to_image(pdf_path, output_dir="public/test-image", dpi=300):
     pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
     output_image_path = os.path.join(output_dir, f"{pdf_name}.png")
 
-    # Save the image
-    print(output_image_path)
     pix.save(output_image_path)
-    print(f'Image saved to {output_image_path}')
 
     return output_image_path
 

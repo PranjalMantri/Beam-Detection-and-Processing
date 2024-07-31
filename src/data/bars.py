@@ -196,10 +196,10 @@ def process_image(image_path, output_dir="public/bars"):
             if bar_image is not None:
                 output_path = os.path.join(output_dir, f'bar_{bar_count}.png')
                 cv2.imwrite(output_path, bar_image)
-                print(f"Image 'bar_{bar_count}.png' created successfully.")
+                # print(f"Image 'bar_{bar_count}.png' created successfully.")
                 bar_count += 1
-    else:
-        print("No lines detected in the image.")
+    # else:
+    #     print("No lines detected in the image.")
 
     return bar_info
 

@@ -66,16 +66,20 @@ def detect_symbols(roi):
     return ""
 
 
-def get_vertical_scale(image_path):
+import cv2
+import os
+
+def get_vertical_scale(image_path="public/vertical_scales/vertical_scale_0.png"):
     processed_image, original_image = preprocess_image(image_path)
     longest_line = find_longest_vertical_line(processed_image)
     
     # Convert grayscale to color for drawing colored line
     color_image = cv2.cvtColor(original_image, cv2.COLOR_GRAY2BGR)
     
+    line_length = None
     if longest_line:
         x1, y1, x2, y2 = longest_line
-        print(f"The longest vertical line is from ({x1}, {y1}) to ({x2}, {y2}) with length {abs(y2 - y1)} pixels.")
+        line_length = abs(y2 - y1)
         
         # Draw the line on the color image
         cv2.line(color_image, (x1, y1), (x2, y2), (0, 0, 255), 2)  # Red line
@@ -83,28 +87,28 @@ def get_vertical_scale(image_path):
         # Save the image with the line drawn
         output_path = os.path.splitext(image_path)[0] + '_with_line.png'
         cv2.imwrite(output_path, color_image)
-        print(f"Image with detected line saved as {output_path}")
         
         # Display the image
-        cv2.imshow('Longest Vertical Line', color_image)
+        # cv2.imshow('Longest Vertical Line', color_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-    else:
-        print("No vertical line detected.")
+    # else:
+    #     print("No vertical line detected.")
     
     rotated_image = cv2.rotate(original_image, cv2.ROTATE_90_CLOCKWISE)
     
     text_results = read_text(rotated_image)
 
-    if not text_results:
-        print("Could not read any text")
+    detected_texts = []
+
+    # if not text_results:
+    #     print("Could not read any text")
 
     for result in text_results:
         top_left = tuple(result[0][0])
         bottom_right = tuple(result[0][2])
         text = result[1]
         confidence = result[2]
-        print(f"Detected text: {text} with confidence {confidence}")
         
         # Expand the bounding box
         expanded_top_left = (max(top_left[0] - 10, 0), max(top_left[1] - 10, 0))
@@ -115,23 +119,28 @@ def get_vertical_scale(image_path):
         
         # Detect symbols
         symbol = detect_symbols(roi)
-        
-        # Include the detected symbol in the text
+
         if symbol:
-            text += symbol
+            if text[-1] in {'"', "'"}:
+                text = text[:-1] + symbol
+            else:
+                text += symbol
         
-        print(f"Detected text with symbols: {text} with confidence {confidence}")
+        
+        detected_texts.append((text, confidence))
         
         cv2.rectangle(rotated_image, top_left, bottom_right, (0, 255, 0), 2)
     
     # Save and display the image with rectangles
     output_text_path = os.path.splitext(image_path)[0] + '_with_text.png'
     cv2.imwrite(output_text_path, rotated_image)
-    print(f"Image with detected text saved as {output_text_path}")
     
-    cv2.imshow('Detected Text', rotated_image)
+    # cv2.imshow('Detected Text', rotated_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+    return line_length, detected_texts
+
 
 
 if __name__ == "__main__":
