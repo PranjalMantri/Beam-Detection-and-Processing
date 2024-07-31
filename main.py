@@ -9,10 +9,10 @@ from src.data.bars import process_image
 pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
 
 image_path = pdf_to_image(pdf_path)
-# image_path = "public/images/Class 1/PDF 3_1.png"
+
 beams = detect_beams(image_path)
-horizontal_scale = detect_and_save_horizontal(image_path)
-vertical_scale = detect_and_save_vertical(image_path)
+horizontal_scale = detect_and_save_horizontal(image_path, add_padding=True)
+vertical_scale = detect_and_save_vertical(image_path,add_padding=True)
 
 if not beams:
     print("Something went wrong while detecting beams")
@@ -49,4 +49,4 @@ coloured_column = create_image_mask(sample_beam_image, column_colour.lower(), ou
 
 bar_info = process_image(coloured_beam)
 
-print(bar_info)
+# print(bar_info)

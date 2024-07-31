@@ -41,10 +41,12 @@ def detect_and_save_vertical(image_path, model_path="src/models/scale_detector.p
     for idx, (xmin, ymin, xmax, ymax) in enumerate(vertical_scales, start=next_file_number):
         # Don't need to add padding in vertical scale generally
         if add_padding:
-            padding = 20
+            padding = 30
+            xmin = max(0, xmin - padding)
+            xmax = min(image_rgb.shape[1], xmax + padding)
             ymin = max(0, ymin - padding)
             ymax = min(image_rgb.shape[0], ymax + padding)
-        
+  
         rect_image = image_rgb[ymin:ymax, xmin:xmax]
 
         rect_image_path = os.path.join(output_dir, f'vertical_scale_{idx}.png')
@@ -63,4 +65,4 @@ if __name__ == "__main__":
     image_path = "public/images/Class 1/PDF 3_1.png"
     model_path = "src/models/scale_detector.pt"
     output_dir = "public/vertical_scales"
-    detect_and_save_vertical(image_path, model_path, output_dir, add_padding=False)
+    detect_and_save_vertical(image_path, model_path, output_dir, add_padding=True)
