@@ -154,7 +154,7 @@ def draw_bar(image, bar_info, bar_number, h_pixels_to_inches, v_pixels_to_inches
     
     return None
 
-def process_image(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length, output_dir="public/bars"):
+def get_bars(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length, output_dir="public/bars"):
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -191,7 +191,7 @@ def process_image(image_path, horizontal_pixel_length, horizontal_actual_length,
             if bar_image is not None:
                 output_path = os.path.join(output_dir, f'bar_{bar_count}.png')
                 cv2.imwrite(output_path, bar_image)
-                print(f"Image 'bar_{bar_count}.png' created successfully.")
+                # print(f"Image 'bar_{bar_count}.png' created successfully.")
                 bar_count += 1
     else:
         print("No lines detected in the image.")
@@ -204,5 +204,5 @@ if __name__ == "__main__":
     horizontal_actual_length = 12  # Example value in inches, replace with actual measurement
     vertical_pixel_length = 100    # Example value, replace with actual measurement
     vertical_actual_length = 10    # Example value in inches, replace with actual measurement
-    bar_info = process_image(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length)
+    bar_info = get_bars(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length)
     print(bar_info)
