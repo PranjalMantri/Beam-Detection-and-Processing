@@ -66,9 +66,6 @@ def detect_symbols(roi):
     return ""
 
 
-import cv2
-import os
-
 def get_vertical_scale(image_path="public/vertical_scales/vertical_scale_0.png"):
     processed_image, original_image = preprocess_image(image_path)
     longest_line = find_longest_vertical_line(processed_image)
@@ -134,10 +131,6 @@ def get_vertical_scale(image_path="public/vertical_scales/vertical_scale_0.png")
     # Save and display the image with rectangles
     output_text_path = os.path.splitext(image_path)[0] + '_with_text.png'
     cv2.imwrite(output_text_path, rotated_image)
-    
-    # cv2.imshow('Detected Text', rotated_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
     return line_length, detected_texts
 

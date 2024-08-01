@@ -1,4 +1,3 @@
 .venv
 public
 *__pycache__
-clean.py

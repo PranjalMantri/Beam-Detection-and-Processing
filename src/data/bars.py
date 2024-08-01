@@ -86,6 +86,10 @@ def detect_bars(horizontal_lines, vertical_lines, image_shape):
         start_v_lines, end_v_lines = filter_closest_lines(start_v_lines, end_v_lines)
         
         horizontal_length = calculate_line_length(h_line)
+        
+        if horizontal_length <= 50:  # Skip bars with horizontal length less than or equal to 50 pixels
+            continue
+        
         vertical_length = 0
         
         for v_line in start_v_lines + end_v_lines:
@@ -113,14 +117,7 @@ def filter_closest_lines(start_lines, end_lines):
         
     return start_lines, end_lines
 
-HORIZONTAL_PIXEL_TO_INCH = 0.1224
-VERTICAL_PIXEL_TO_INCH = 0.1153
-HORIZONTAL_PIXEL_TO_MM = 0.3216
-VERTICAL_PIXEL_TO_MM = 0.3412
-HORIZONTAL_PIXEL_TO_CM = 3.2165
-VERTICAL_PIXEL_TO_CM = 3.4120
-
-def draw_bar(image, bar_info, bar_number):
+def draw_bar(image, bar_info, bar_number, h_pixels_to_inches, v_pixels_to_inches):
     if bar_info["total_length"] > 150:
         bar_image = image.copy()
         
@@ -141,19 +138,13 @@ def draw_bar(image, bar_info, bar_number):
                      (int(v_bar[2]), int(v_bar[3])), 
                      (0, 255, 0), 2)
         
-        horizontal_length_inch = bar_info['horizontal_length'] * HORIZONTAL_PIXEL_TO_INCH
-        vertical_length_inch = bar_info['vertical_length'] * VERTICAL_PIXEL_TO_INCH
+        horizontal_length_inch = bar_info['horizontal_length'] * h_pixels_to_inches
+        vertical_length_inch = bar_info['vertical_length'] * v_pixels_to_inches
         total_length_inch = horizontal_length_inch + vertical_length_inch
         
-        horizontal_length_mm = bar_info['horizontal_length'] * HORIZONTAL_PIXEL_TO_MM
-        vertical_length_mm = bar_info['vertical_length'] * VERTICAL_PIXEL_TO_MM
-        
-        horizontal_length_cm = bar_info['horizontal_length'] * HORIZONTAL_PIXEL_TO_CM
-        vertical_length_cm = bar_info['vertical_length'] * VERTICAL_PIXEL_TO_CM
-        
         total_info = f"Bar {bar_number}: Total Length(pixels): {bar_info['total_length']:.2f}px, Total Length(inches): {total_length_inch:.2f}"
-        horizontal_info = f"Horizontal Length: Pixels: {bar_info['horizontal_length']:.2f}, Inches: {horizontal_length_inch:.2f}, mm: {horizontal_length_mm:.2f}, cm: {horizontal_length_cm:.2f}"
-        vertical_info = f"Vertical Length: Pixels: {bar_info['vertical_length']:.2f}, Inches: {vertical_length_inch:.2f}, mm: {vertical_length_mm:.2f}, cm: {vertical_length_cm:.2f}"
+        horizontal_info = f"Horizontal Length: Pixels: {bar_info['horizontal_length']:.2f}, Inches: {horizontal_length_inch:.2f}"
+        vertical_info = f"Vertical Length: Pixels: {bar_info['vertical_length']:.2f}, Inches: {vertical_length_inch:.2f}"
         
         cv2.putText(bar_image, total_info, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         cv2.putText(bar_image, horizontal_info, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
@@ -163,7 +154,7 @@ def draw_bar(image, bar_info, bar_number):
     
     return None
 
-def process_image(image_path, output_dir="public/bars"):
+def process_image(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length, output_dir="public/bars"):
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -190,20 +181,28 @@ def process_image(image_path, output_dir="public/bars"):
 
         bar_info = detect_bars(horizontal_lines, vertical_lines, image.shape)
 
+        # Calculate the conversion constants
+        h_pixels_to_inches = horizontal_actual_length / horizontal_pixel_length
+        v_pixels_to_inches = vertical_actual_length / vertical_pixel_length
+
         bar_count = 1
         for bar in bar_info:
-            bar_image = draw_bar(image, bar, bar_count)
+            bar_image = draw_bar(image, bar, bar_count, h_pixels_to_inches, v_pixels_to_inches)
             if bar_image is not None:
                 output_path = os.path.join(output_dir, f'bar_{bar_count}.png')
                 cv2.imwrite(output_path, bar_image)
-                # print(f"Image 'bar_{bar_count}.png' created successfully.")
+                print(f"Image 'bar_{bar_count}.png' created successfully.")
                 bar_count += 1
-    # else:
-    #     print("No lines detected in the image.")
+    else:
+        print("No lines detected in the image.")
 
     return bar_info
 
 if __name__ == "__main__":
     image_path = "Sample Image Path"
-    bar_info = process_image(image_path)
+    horizontal_pixel_length = 100  # Example value, replace with actual measurement
+    horizontal_actual_length = 12  # Example value in inches, replace with actual measurement
+    vertical_pixel_length = 100    # Example value, replace with actual measurement
+    vertical_actual_length = 10    # Example value in inches, replace with actual measurement
+    bar_info = process_image(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length)
     print(bar_info)

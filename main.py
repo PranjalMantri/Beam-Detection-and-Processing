@@ -8,6 +8,7 @@ from src.data.bars import process_image
 from src.scale.get_vertical_scale import get_vertical_scale
 from src.scale.get_horizontal_scale import get_horizontal_scale
 from src.scale.parse_measurement_text import parse_measurement
+from src.data.clean import clean_mask_image
 
 
 pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
@@ -30,11 +31,16 @@ if not vertical_scale:
 colors, _ = get_colors(image_path)
 
 while True:
-    if colors:
-        print("These are the most prominent colors in the image: ", *list(set(colors)))
+    # if colors:
+    #     print("These are the most prominent colors in the image: ", *list(set(colors)))
 
-    beam_colour = input("Enter the colour of beam in your image: ").lower().title()
-    column_colour = input("Enter the colour of column in your image: ").lower().title()
+    colors = ["red", "cyan"]
+
+    # beam_colour = input("Enter the colour of beam in your image: ").lower().title()
+    # column_colour = input("Enter the colour of column in your image: ").lower().title()
+
+    beam_colour = "red"
+    column_colour = "cyan"
 
     if beam_colour not in colors:
         print("Invalid colour, please enter a colour that is in the image")
@@ -44,10 +50,13 @@ while True:
         break
 
 
-sample_beam_image = "public/Beams/beam_1.png"
+sample_beam_image = "public/Beams/beam_9.png"
 
 vertical_line_length, vertical_scale_text = get_vertical_scale()
 horizontal_line_length, horizontal_scale_text = get_horizontal_scale()
+
+print(f"Vertical length in pixels: {vertical_line_length}")
+print(f"Horizontal length in pixels: {horizontal_line_length}")
 
 print(f"{vertical_scale_text[0][0]}: ")
 print(f"{horizontal_scale_text[0][0]}: ")
@@ -58,9 +67,7 @@ horizontal_scale_in_inches = parse_measurement(horizontal_scale_text[0][0])
 print(f"{vertical_scale_text}: {vertical_scale_in_inches} inches")
 print(f"{horizontal_scale_text}: {horizontal_scale_in_inches} inches")
 
-coloured_beam = create_image_mask(sample_beam_image, beam_colour.lower(), output_dir="public/beam-image")
-coloured_column = create_image_mask(sample_beam_image, column_colour.lower(), output_dir="public/column-image")
+coloured_beam = clean_mask_image(create_image_mask(sample_beam_image, beam_colour.lower(), output_dir="public/beam-image"))
+coloured_column = clean_mask_image(create_image_mask(sample_beam_image, column_colour.lower(), output_dir="public/column-image"), type="column")
 
-bar_info = process_image(coloured_beam)
-
-# print(bar_info)
+bar_info = process_image(coloured_beam, horizontal_line_length, horizontal_scale_in_inches, vertical_line_length, vertical_scale_in_inches)
