@@ -66,6 +66,3 @@ coloured_column = clean_mask_image(create_image_mask(sample_beam_image, column_c
 
 bar_info = get_bars(sample_beam_image, coloured_beam, center_height, horizontal_line_length, horizontal_scale_in_inches, vertical_line_length, vertical_scale_in_inches)
 column_info = get_column_data(coloured_column, center_height, horizontal_line_length, horizontal_scale_in_inches)
-
-# print(f"Bar Information: {bar_info}")
-print(f"Column Information: {column_info}")
