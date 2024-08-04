@@ -4,6 +4,7 @@ import os
 
 
 def calculate_line_length(line):
+    # Take a line, extract its coords and get its length
     x1, y1, x2, y2 = line
     start_point = np.array((x1, y1))
     end_point = np.array((x2, y2))
@@ -12,13 +13,16 @@ def calculate_line_length(line):
 
 
 def sort_lines(lines):
+    # Sorting lines based on their length in descending order
     return sorted(lines, key=lambda x: calculate_line_length(x), reverse=True)
 
 
 def calculate_distance(xa, ya, xb, yb):
+    # Calculate the distance between two endpoints
     return np.sqrt((xa - xb) ** 2 + (ya - yb) ** 2)
 
 
+# Checks whether there are any vertical lines at the endpoints of horizontal lines
 def check_vertical_at_endpoints(horizontal_line, vertical_lines, tolerance=7, distance_tolerance=10):
     x1, y1, x2, y2 = horizontal_line
     start_lines = []
