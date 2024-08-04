@@ -10,7 +10,7 @@ from src.scale.get_horizontal_scale import get_horizontal_scale
 from src.scale.parse_measurement_text import parse_measurement
 from src.data.clean import clean_mask_image
 from src.data.column import get_column_data
-
+from src.data.beam_center import get_center_height
 
 pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
 
@@ -51,7 +51,9 @@ while True:
         break
 
 
-sample_beam_image = "public/Beams/beam_9.png"
+sample_beam_image = "public/Beams/beam_5.png"
+
+center_height = get_center_height(sample_beam_image)
 
 vertical_line_length, vertical_scale_text = get_vertical_scale()
 horizontal_line_length, horizontal_scale_text = get_horizontal_scale()
@@ -62,8 +64,8 @@ horizontal_scale_in_inches = parse_measurement(horizontal_scale_text[0][0])
 coloured_beam = clean_mask_image(create_image_mask(sample_beam_image, beam_colour.lower(), output_dir="public/beam-image"))
 coloured_column = clean_mask_image(create_image_mask(sample_beam_image, column_colour.lower(), output_dir="public/column-image"), type="column")
 
-bar_info = get_bars(coloured_beam, horizontal_line_length, horizontal_scale_in_inches, vertical_line_length, vertical_scale_in_inches)
-column_info = get_column_data(coloured_column)
+bar_info = get_bars(sample_beam_image, coloured_beam, center_height, horizontal_line_length, horizontal_scale_in_inches, vertical_line_length, vertical_scale_in_inches)
+column_info = get_column_data(coloured_column, center_height)
 
-print(f"Bar Information: {bar_info}")
+# print(f"Bar Information: {bar_info}")
 print(f"Column Information: {column_info}")

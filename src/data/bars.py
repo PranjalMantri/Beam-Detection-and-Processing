@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 
+
 def calculate_line_length(line):
     x1, y1, x2, y2 = line
     start_point = np.array((x1, y1))
@@ -9,11 +10,14 @@ def calculate_line_length(line):
     distance = np.linalg.norm(start_point - end_point)
     return distance
 
+
 def sort_lines(lines):
     return sorted(lines, key=lambda x: calculate_line_length(x), reverse=True)
 
+
 def calculate_distance(xa, ya, xb, yb):
     return np.sqrt((xa - xb) ** 2 + (ya - yb) ** 2)
+
 
 def check_vertical_at_endpoints(horizontal_line, vertical_lines, tolerance=7, distance_tolerance=10):
     x1, y1, x2, y2 = horizontal_line
@@ -35,6 +39,7 @@ def check_vertical_at_endpoints(horizontal_line, vertical_lines, tolerance=7, di
     
     return start_lines, end_lines
 
+
 def segment_lines(lines, max_diff=5):
     horizontal_lines, vertical_lines, slanted_lines = [], [], []
     for line in lines:
@@ -46,6 +51,7 @@ def segment_lines(lines, max_diff=5):
         else:
             slanted_lines.append([x1, y1, x2, y2])
     return horizontal_lines, vertical_lines, slanted_lines
+
 
 def remove_duplicate_lines(lines, max_distance=20, max_y_diff=10, is_horizontal=True):
     def merge_lines(lines, merged_lines):
@@ -75,6 +81,7 @@ def remove_duplicate_lines(lines, max_distance=20, max_y_diff=10, is_horizontal=
         return merged_lines
     else:
         return remove_duplicate_lines(merged_lines, max_distance, max_y_diff, is_horizontal)
+
 
 def detect_bars(horizontal_lines, vertical_lines, image_shape):
     bar_info = []
@@ -109,6 +116,7 @@ def detect_bars(horizontal_lines, vertical_lines, image_shape):
         
     return bar_info
 
+
 def filter_closest_lines(start_lines, end_lines):
     if start_lines:
         start_lines = sorted(start_lines, key=lambda x: x[1])[:1]
@@ -116,6 +124,7 @@ def filter_closest_lines(start_lines, end_lines):
         end_lines = sorted(end_lines, key=lambda x: x[1])[:1]
         
     return start_lines, end_lines
+
 
 def draw_bar(image, bar_info, bar_number, h_pixels_to_inches, v_pixels_to_inches):
     if bar_info["total_length"] > 150:
@@ -154,7 +163,24 @@ def draw_bar(image, bar_info, bar_number, h_pixels_to_inches, v_pixels_to_inches
     
     return None
 
-def get_bars(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length, output_dir="public/bars"):
+
+def classify_bars(image_path, bar_info, center_line_height):
+    
+    classified_bars = []
+    for bar in bar_info:
+        h_y1 = bar["horizontal_bar"][1]
+        if h_y1 < center_line_height:
+            bar_type = "Top Steel"
+        else:
+            bar_type = "Bottom Steel"
+        
+        bar["type"] = bar_type
+        classified_bars.append(bar)
+    
+    return classified_bars
+
+
+def get_bars(image_path, masked_image, center_line_height, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length, output_dir="public/bars"):
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -164,7 +190,7 @@ def get_bars(image_path, horizontal_pixel_length, horizontal_actual_length, vert
         if os.path.isfile(file_path):
             os.remove(file_path)
 
-    image = cv2.imread(image_path)
+    image = cv2.imread(masked_image)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
@@ -186,7 +212,8 @@ def get_bars(image_path, horizontal_pixel_length, horizontal_actual_length, vert
         v_pixels_to_inches = vertical_actual_length / vertical_pixel_length
 
         bar_count = 1
-        for bar in bar_info:
+        classified_bars = classify_bars(image_path, bar_info, center_line_height)
+        for bar in classified_bars:
             bar_image = draw_bar(image, bar, bar_count, h_pixels_to_inches, v_pixels_to_inches)
             if bar_image is not None:
                 output_path = os.path.join(output_dir, f'bar_{bar_count}.png')
@@ -196,7 +223,8 @@ def get_bars(image_path, horizontal_pixel_length, horizontal_actual_length, vert
     else:
         print("No lines detected in the image.")
 
-    return bar_info
+    return classified_bars
+
 
 if __name__ == "__main__":
     image_path = "Sample Image Path"
