@@ -119,11 +119,12 @@ def get_column_data(image_path, center_y, horizontal_pixel_length, horizontal_ac
     detection_sequence.sort()
     detection_sequence = [(label, length) for x1, label, length in detection_sequence]
 
-    plt.figure(figsize=(10, 10))
-    plt.imshow(cv2.cvtColor(output_image, cv2.COLOR_BGR2RGB))
-    plt.title('Detected Horizontal Lines with Lengths in Inches')
-    plt.axis('off')
-    plt.show()
+    # plt.figure(figsize=(10, 10))
+    cv2.imwrite("column_data.png", output_image)
+    # plt.imshow(cv2.cvtColor(output_image, cv2.COLOR_BGR2RGB))
+    # plt.title('Detected Horizontal Lines with Lengths in Inches')
+    # plt.axis('off')
+    # plt.show()
 
     return detection_sequence
 

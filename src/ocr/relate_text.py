@@ -1,102 +1,72 @@
 import cv2
-import easyocr
-import warnings
-from sklearn.cluster import DBSCAN
 import numpy as np
 
-warnings.filterwarnings("ignore", category=FutureWarning)
+def calculate_distance(center1, center2):
+    return np.sqrt((center1[0] - center2[0]) ** 2 + (center1[1] - center2[1]) ** 2)
 
-def detect_and_merge_text(image_path, output_path='output_image.jpg'):
-    # Initialize EasyOCR reader
-    reader = easyocr.Reader(['en'])  # Specify the languages you want to read
+def get_center(bbox):
+    center_x = (bbox[0][0] + bbox[1][0]) / 2
+    center_y = (bbox[0][1] + bbox[1][1]) / 2
+    return (center_x, center_y)
+    
 
-    # Load image
+def get_relations(image_path, bars, texts, output_path='output_image_relations.jpg'):
+    # Load the image
     image = cv2.imread(image_path)
 
-    # Perform text detection
-    results = reader.readtext(image)
+    # Extract centers of bars and texts
+    bar_centers = []
+    for bar in bars:
+        x1, y1, x2, y2 = bar['horizontal_bar']
+        center_x = (x1 + x2) / 2
+        center_y = (y1 + y2) / 2
+        bar_centers.append({'center': (center_x, center_y), 'type': bar['type'], 'bar': bar, 'coordinates': [(int(x1), int(y1)), (int(x2), int(y2))]})
 
-    # Extract bounding box coordinates and their centers
-    boxes = []
-    for (bbox, text, prob) in results:
-        top_left = tuple(bbox[0])
-        bottom_right = tuple(bbox[2])
-        center_x = (top_left[0] + bottom_right[0]) // 2
-        center_y = (top_left[1] + bottom_right[1]) // 2
-        boxes.append((top_left, bottom_right))
+    text_centers = [{'center': get_center(text['coordinates']), 'text': text['text'], 'coordinates': [(int(text['coordinates'][0][0]), int(text['coordinates'][0][1])), (int(text['coordinates'][1][0]), int(text['coordinates'][1][1]))]} for text in texts]
 
-    # Convert to numpy array for DBSCAN
-    centers = np.array([( (box[0][0] + box[1][0]) // 2, ( (box[0][1] + box[1][1]) // 2) ) for box in boxes])
-
-    # Perform DBSCAN clustering
-    db = DBSCAN(eps=50, min_samples=1).fit(centers)
-    labels = db.labels_
-
-    # Merge boxes
-    merged_boxes = []
-    for label in set(labels):
-        label_indices = np.where(labels == label)[0]
-        if len(label_indices) > 0:
-            x_min = min(boxes[i][0][0] for i in label_indices)
-            y_min = min(boxes[i][0][1] for i in label_indices)
-            x_max = max(boxes[i][1][0] for i in label_indices)
-            y_max = max(boxes[i][1][1] for i in label_indices)
-            
-            merged_boxes.append(((x_min, y_min), (x_max, y_max)))
-
-    # Remove small rectangles inside larger ones
-    final_boxes = []
-    for i in range(len(merged_boxes)):
-        is_inside = False
-        for j in range(len(merged_boxes)):
-            if i != j:
-                if (merged_boxes[i][0][0] >= merged_boxes[j][0][0] and
-                    merged_boxes[i][0][1] >= merged_boxes[j][0][1] and
-                    merged_boxes[i][1][0] <= merged_boxes[j][1][0] and
-                    merged_boxes[i][1][1] <= merged_boxes[j][1][1]):
-                    is_inside = True
-                    break
-        if not is_inside:
-            final_boxes.append(merged_boxes[i])
-
-    detected_texts = []
-
-    # Draw final rectangles around detected text and run OCR again on merged areas
-    for (top_left, bottom_right) in final_boxes:
-        # Extract the merged region from the image
-        merged_region = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+    # Associate text with bars considering vertical position
+    associations = []
+    for bar in bar_centers:
+        bar_center = bar['center']
+        bar_type = bar['type']
+        closest_text = None
+        min_distance = float('inf')
+        for text in text_centers:
+            text_center = text['center']
+            if (bar_type == 'Top Steel' and text_center[1] < bar_center[1]) or (bar_type == 'Bottom Steel' and text_center[1] > bar_center[1]):
+                distance = calculate_distance(bar_center, text_center)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_text = text
         
-        # Run OCR again on the merged region
-        new_results = reader.readtext(merged_region)
-        
-        # Merge the detected text
-        merged_text = " ".join([text for (bbox, text, prob) in new_results if text.strip()])
-        
-        # Only draw and store rectangles with detected text
-        if merged_text:
-            # Draw rectangle
-            cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
-            
-            # Put merged text near the bounding box
-            cv2.putText(image, merged_text, (top_left[0], top_left[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        if closest_text:
+            associations.append((bar, closest_text))
 
-            # Print rectangle coordinates and detected text
-            print(f"Rectangle: Top Left {top_left}, Bottom Right {bottom_right}")
-            print(f"Detected Text: {merged_text}\n")
+    # Visualize the bars, text, and their associations
+    for bar, text in associations:
+        # Draw bar bounding box
+        bar_start, bar_end = bar['coordinates']
+        cv2.rectangle(image, bar_start, bar_end, (0, 255, 0), 2)
 
-            # Append the detected text and coordinates to the list
-            detected_texts.append({
-                'coordinates': (top_left, bottom_right),
-                'text': merged_text
-            })
+        # Draw text bounding box
+        text_start, text_end = text['coordinates']
+        cv2.rectangle(image, text_start, text_end, (255, 0, 0), 2)
 
-    # Save the output image
+        # Draw line connecting bar and text
+        cv2.line(image, (int(bar['center'][0]), int(bar['center'][1])), (int(text['center'][0]), int(text['center'][1])), (0, 0, 255), 2)
+
+    # Save or display the image
     cv2.imwrite(output_path, image)
-    print(f"Output image saved to {output_path}")
+    # To display the image
+    # cv2.imshow('Associations', image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
-    return detected_texts
+if __name__ == "__main__":
+    # Example usage
+    image_path = "public/beam-image/cleaned_masked_image.png"
+    bars = [{'horizontal_bar': [61.874992, 270.12292, 939.375, 270.68887], 'start_vertical_bars': [[59.39831, 139.37581, 59.313747, 273.12656]], 'end_vertical_bars': [[939.0522, 141.87325, 939.1515, 265.6262]], 'horizontal_length': 877.5002, 'vertical_length': 257.5037612915039, 'total_length': 1135.0039443969727, 'type': 'Bottom Steel'}, {'horizontal_bar': [56.874996, 126.98653, 943.125, 126.98558], 'start_vertical_bars': [[51.92357, 128.12518, 51.904232, 260.62518]], 'end_vertical_bars': [[945.06525, 131.87604, 945.2979, 256.8756]], 'horizontal_length': 886.25, 'vertical_length': 257.4997863769531, 'total_length': 1143.7497863769531, 'type': 'Top Steel'}, {'horizontal_bar': [213.08562, 267.23352, 796.8751, 267.59586], 'start_vertical_bars': [], 'end_vertical_bars': [], 'horizontal_length': 583.7896, 'vertical_length': 0, 'total_length': 583.7896118164062, 'type': 'Bottom Steel'}]
 
-# Example usage
-image_path = "public/Beams/beam_0.png"
-output_path = 'output_image.jpg'
-detected_texts = detect_and_merge_text(image_path, output_path)
+    texts = [{'coordinates': ((430, 34), (536, 66)), 'text': '2-20 &A)'}, {'coordinates': ((296, 92), (342, 122)), 'text': '105'}, {'coordinates': ((609, 187), (895, 223)), 'text': '2-10 €XTRA RING TYP.'}, {'coordinates': ((296, 292), (342, 324)), 'text': '195]'}, {'coordinates': ((429, 339), (765, 377)), 'text': '2-20 (B)+2-25 )+2-25'}, {'coordinates': ((140, 434), (230, 522)), 'text': '8q 4"CIC 12NOS'}, {'coordinates': ((403, 437), (595, 559)), 'text': '8q 6"CIC REST B105 12"x24")'}, {'coordinates': ((800, 431), (890, 522)), 'text': '4"CIC 12NOS 8Q'}]
+
+    get_relations(image_path, bars, texts)

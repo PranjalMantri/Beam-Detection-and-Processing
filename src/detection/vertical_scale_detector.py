@@ -41,7 +41,7 @@ def detect_and_save_vertical(image_path, model_path="src/models/scale_detector.p
     for idx, (xmin, ymin, xmax, ymax) in enumerate(vertical_scales, start=next_file_number):
         # Don't need to add padding in vertical scale generally
         if add_padding:
-            padding = 30
+            padding = 15
             xmin = max(0, xmin - padding)
             xmax = min(image_rgb.shape[1], xmax + padding)
             ymin = max(0, ymin - padding)
