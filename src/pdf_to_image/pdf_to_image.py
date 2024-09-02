@@ -10,6 +10,7 @@ def pdf_to_image(pdf_path, output_dir="public/test-image", dpi=450):
     output_dir (str): The directory where the output image will be saved.
     dpi (int): The resolution of the output image in DPI (dots per inch). Default is 300.
     """
+
     # Open the PDF file
     pdf_document = fitz.open(pdf_path)
     
@@ -24,10 +25,8 @@ def pdf_to_image(pdf_path, output_dir="public/test-image", dpi=450):
     # Set the zoom factor based on DPI
     zoom = dpi / 72  # 72 is the default DPI for PDFs
 
-    # Define transformation matrix for zooming
-    mat = fitz.Matrix(zoom, zoom)
 
-    # Render page to a pixmap (image)
+    mat = fitz.Matrix(zoom, zoom)
     pix = page.get_pixmap(matrix=mat, alpha=False)
 
     # Extract the PDF name and change the extension to .png
@@ -41,7 +40,5 @@ def pdf_to_image(pdf_path, output_dir="public/test-image", dpi=450):
 
 if __name__ == "__main__":
     pdf_path = "public/pdfs/Class-1/PDF 3.pdf"
-    # TODO: Add Proper output directory pathh
-    output_dir = ""
 
-    pdf_to_image(pdf_path, output_dir, dpi=400)
+    pdf_to_image(pdf_path, dpi=400)

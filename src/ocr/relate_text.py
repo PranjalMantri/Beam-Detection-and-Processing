@@ -57,10 +57,6 @@ def get_relations(image_path, bars, texts, output_path='output_image_relations.j
 
     # Save or display the image
     cv2.imwrite(output_path, image)
-    # To display the image
-    # cv2.imshow('Associations', image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     # Example usage

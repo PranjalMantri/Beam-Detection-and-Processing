@@ -105,6 +105,9 @@ def get_column_data(image_path, center_y, horizontal_pixel_length, horizontal_ac
     output_image = np.copy(image)
     detection_sequence = []
 
+    # Draw the center line
+    # cv2.line(output_image, (0, center_y), (output_image.shape[1], center_y), (0, 0, 255), 2)
+
     for area, color, label in [(topmost_area, (255, 0, 0), label_topmost), 
                                (second_topmost_area, (0, 255, 0), 'B')]:
         for line in area:
@@ -119,20 +122,19 @@ def get_column_data(image_path, center_y, horizontal_pixel_length, horizontal_ac
     detection_sequence.sort()
     detection_sequence = [(label, length) for x1, label, length in detection_sequence]
 
-    # plt.figure(figsize=(10, 10))
     cv2.imwrite("column_data.png", output_image)
-    # plt.imshow(cv2.cvtColor(output_image, cv2.COLOR_BGR2RGB))
-    # plt.title('Detected Horizontal Lines with Lengths in Inches')
-    # plt.axis('off')
-    # plt.show()
+
 
     return detection_sequence
 
 if __name__ == "__main__":
     image_path = "public/Beams/beam_1.png"
     center_y = 250  # Example y-coordinate for the center line
+    horizontal_pixel_length = 100  # Example pixel length
+    horizontal_actual_length = 10  # Example actual length in inches
+
     try:
-        detection_sequence = get_column_data(image_path, center_y)
+        detection_sequence = get_column_data(image_path, center_y, horizontal_pixel_length, horizontal_actual_length)
         if detection_sequence:
             print("Detection sequence:", detection_sequence)
         else:

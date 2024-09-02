@@ -23,7 +23,7 @@ def calculate_distance(xa, ya, xb, yb):
 
 
 # Checks whether there are any vertical lines at the endpoints of horizontal lines
-def check_vertical_at_endpoints(horizontal_line, vertical_lines, tolerance=3, distance_tolerance=10):
+def check_vertical_at_endpoints(horizontal_line, vertical_lines, tolerance=5, distance_tolerance=15):
     x1, y1, x2, y2 = horizontal_line
     start_lines = []
     end_lines = []
@@ -188,7 +188,7 @@ def classify_bars(bar_info, center_line_height):
     return classified_bars
 
 
-def merge_horizontal_lines(bar_info, max_y_distance=5, max_x_distance=50):
+def merge_horizontal_lines(bar_info, max_y_distance=5, max_x_distance=20):
     merged_bars = []
 
     def can_merge(h1, h2):
@@ -306,81 +306,3 @@ if __name__ == "__main__":
     vertical_actual_length = 24    # Example value in inches, replace with actual measurement
     bar_info = get_bars(image_path, horizontal_pixel_length, horizontal_actual_length, vertical_pixel_length, vertical_actual_length)
     print(bar_info)
-
-
-
-# import cv2
-# import numpy as np
-# import matplotlib.pyplot as plt
-
-# def calculate_line_length(line):
-#     x1, y1, x2, y2 = line
-#     return np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-
-# def segment_lines(lines, max_diff=5):
-#     horizontal_lines, vertical_lines, slanted_lines = [], [], []
-#     for line in lines:
-#         x1, y1, x2, y2 = line[0]
-#         if abs(x1 - x2) <= max_diff:
-#             vertical_lines.append([x1, y1, x2, y2])
-#         elif abs(y1 - y2) <= max_diff:
-#             horizontal_lines.append([x1, y1, x2, y2])
-#         else:
-#             slanted_lines.append([x1, y1, x2, y2])
-#     return horizontal_lines, vertical_lines, slanted_lines
-
-# def detect_and_display_individual_horizontal_lines(image_path, min_length=50):
-#     # Read the image
-#     original_image = cv2.imread(image_path)
-#     gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
-#     blur = cv2.GaussianBlur(gray, (5, 5), 0)
-
-#     # Detect lines
-#     lsd = cv2.createLineSegmentDetector(cv2.LSD_REFINE_STD)
-#     lines = lsd.detect(blur)[0]
-
-#     if lines is not None:
-#         # Segment lines
-#         horizontal_lines, _, _ = segment_lines(lines)
-
-#         # Filter and sort horizontal lines by length in descending order
-#         sorted_horizontal_lines = sorted(
-#             [line for line in horizontal_lines if calculate_line_length(line) > min_length],
-#             key=calculate_line_length,
-#             reverse=True
-#         )
-
-#         # Display each line individually
-#         for i, line in enumerate(sorted_horizontal_lines, 1):
-#             x1, y1, x2, y2 = map(int, line)
-#             length = calculate_line_length(line)
-
-#             # Create a clean copy of the original image
-#             image_copy = original_image.copy()
-
-#             # Draw the single line (increased thickness for visibility)
-#             cv2.line(image_copy, (x1, y1), (x2, y2), (0, 255, 0), 5)
-
-#             # Convert BGR to RGB
-#             image_copy_rgb = cv2.cvtColor(image_copy, cv2.COLOR_BGR2RGB)
-
-#             # Add text with line information
-#             text = f"Line {i}: Length: {length:.2f} pixels"
-#             cv2.putText(image_copy, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-#             # Display the image using matplotlib
-#             plt.figure(figsize=(10, 8))
-#             plt.imshow(image_copy_rgb)
-#             plt.title(f"Horizontal Line {i}")
-#             plt.axis('off')  # Hide axes
-#             plt.show()
-#             print(f"Line {i}: ({x1}, {y1}) to ({x2}, {y2}), Length: {length:.2f} pixels")
-
-#         print(f"\nTotal horizontal lines larger than {min_length} pixels: {len(sorted_horizontal_lines)}")
-
-#     else:
-#         print("No lines detected in the image.")
-
-# if __name__ == "__main__":
-#     image_path = "public/beam-image/cleaned_masked_image.png"  # Replace with your image path
-#     detect_and_display_individual_horizontal_lines(image_path)

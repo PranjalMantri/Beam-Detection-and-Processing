@@ -3,8 +3,60 @@ import easyocr
 import warnings
 from sklearn.cluster import DBSCAN
 import numpy as np
+import re
 
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+def parse_text(text):
+    # Remove any white spaces from the text
+    text = text.replace(" ", "")
+    
+    # Check if "EXTRA" is in the text
+    if "EXTRA" in text:
+        return "No valid bar found"
+
+    # Pattern to match bar name (alphabet) adjacent to 'Q' or surrounded by '(' or ')'
+    pattern = r'(\d+)-(\d+)\s*(Q*\(*([A-Z])\)*)'
+
+    # Find all matches in the text
+    matches = re.findall(pattern, text)
+
+    if not matches:
+        return "No valid bar found"
+
+    bar_info = []
+    bar_names = set()
+    for match in matches:
+        quantity, measurement, full_match, bar_name = match
+        if bar_name != 'Q':
+            bar_info.append({
+                'bar_name': bar_name,
+                'quantity': quantity,
+                'measurement': measurement
+            })
+            bar_names.add(bar_name)
+
+    if not bar_info:
+        return "No valid bar found"
+
+    # Check for the presence of other letters besides Q and bar names
+    all_letters = set(re.findall(r'[A-Z]', text))
+    other_letters = all_letters - set('Q') - bar_names
+
+    if len(other_letters) <= 0:
+        bar_type = "THROUGH"
+    else:
+        bar_type = "EXTRA"
+
+    # Create the final parsed result
+    parsed_results = []
+    for bar in bar_info:
+        result = (f"{bar['bar_name']}: Bar Type - {bar_type}, "
+                  f"Quantity - {bar['quantity']}, "
+                  f"Measurement - {bar['measurement']}")
+        parsed_results.append(result)
+
+    return "; ".join(parsed_results)
 
 def detect_text(image_path, output_path='text_detections.jpg'):
     # Initialize EasyOCR reader
@@ -70,27 +122,26 @@ def detect_text(image_path, output_path='text_detections.jpg'):
         # Merge the detected text
         merged_text = " ".join([text for (bbox, text, prob) in new_results if text.strip()])
         
+        # Parse the detected text using the parse_text function
+        parsed_result = parse_text(merged_text)
+        
         # Only draw and store rectangles with detected text
         if merged_text:
             # Draw rectangle
             cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
             
-            # Put merged text near the bounding box
-            cv2.putText(image, merged_text, (top_left[0], top_left[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            # Put parsed text near the bounding box
+            cv2.putText(image, parsed_result, (top_left[0], top_left[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-            # Print rectangle coordinates and detected text
-            # print(f"Rectangle: Top Left {top_left}, Bottom Right {bottom_right}")
-            # print(f"Detected Text: {merged_text}\n")
-
-            # Append the detected text and coordinates to the list
+            # Append the detected text and parsed result to the list
             detected_texts.append({
                 'coordinates': (top_left, bottom_right),
-                'text': merged_text
+                'text': merged_text,
+                'parsed_result': parsed_result
             })
 
     # Save the output image
     cv2.imwrite(output_path, image)
-    print(f"Output image saved to {output_path}")
 
     return detected_texts
 

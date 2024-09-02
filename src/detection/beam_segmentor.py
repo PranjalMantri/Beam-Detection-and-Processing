@@ -8,19 +8,22 @@ from src.detection.helper.plot_detections import plot_one_box
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+# Using the YOLO object detection model to detect individual beams in an image with multiple beams
 def detect_beams(image_path, model_path="src/models/beam_detector.pt"):
     model = YOLO(model_path)
 
     image = cv2.imread(image_path)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+    # results will contain detected coords, confidence and the class of the detected object
     results = model(image_rgb)
     detections = results[0].boxes.data.cpu().numpy()
 
+    # Saving the individual beam image to a folder
     beam_output_dir = 'public/Beams'
     vertical_scale_output_dir = 'public/vertical_scales'
 
-    # If directory already exists, delete it to remove previous images
+    # If the directory already exists, delete it to remove previous images
     for output_dir in [beam_output_dir, vertical_scale_output_dir]:
         if os.path.isdir(output_dir):
             for file in os.listdir(output_dir):
@@ -42,6 +45,7 @@ def detect_beams(image_path, model_path="src/models/beam_detector.pt"):
         else:
             target_list = vertical_scales
         
+        # Removing detections where duplicate or overlapping beams were detected
         merged = False
         for i, existing_rect in enumerate(target_list):
             iou, _ = calculate_intersection_over_union(rect, existing_rect)
@@ -53,7 +57,7 @@ def detect_beams(image_path, model_path="src/models/beam_detector.pt"):
         if not merged:
             target_list.append(rect)
 
-    # Save beams
+    # Saving beams
     for idx, (xmin, ymin, width, height) in enumerate(beams):
         xmax, ymax = xmin + width, ymin + height
         rect_image = image_rgb[ymin:ymax, xmin:xmax]
@@ -63,7 +67,7 @@ def detect_beams(image_path, model_path="src/models/beam_detector.pt"):
         
         plot_one_box([xmin, ymin, xmax, ymax], image_rgb, color=(255, 0, 0), label="Beam", line_thickness=2)
 
-    # Save vertical scales
+    # Save vertical scales (can comment this out)
     for idx, (xmin, ymin, width, height) in enumerate(vertical_scales):
         xmax, ymax = xmin + width, ymin + height
         rect_image = image_rgb[ymin:ymax, xmin:xmax]

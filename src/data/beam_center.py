@@ -12,14 +12,13 @@ def get_center_height(image_path):
     # Detect lines in the image
     lines = lsd.detect(gray)[0]  # Position 0 of the returned tuple are the detected lines
 
-    # Filter horizontal lines with length at least 50 pixels
+    # Filter horizontal lines with length at least 100 pixels
     horizontal_lines = [
         line for line in lines
         if abs(line[0][1] - line[0][3]) < 10 and np.sqrt((line[0][2] - line[0][0])**2 + (line[0][3] - line[0][1])**2) >= 100
     ]
     
     if not horizontal_lines:
-        print("No horizontal lines detected")
         return None
     
     # Find topmost and bottommost lines
@@ -33,11 +32,12 @@ def get_center_height(image_path):
 
 # Example usage
 if __name__ == "__main__":
-    image_path = "public/Beams/beam_9.png"
+    image_path = "public/Beams/beam_0.png"
     try:
-        center_y = get_center_height(image_path=image_path)
+        center_y, output_path = get_center_height(image_path=image_path)
         if center_y is not None:
             print(f"Center line height coordinate: {center_y}")
+            print(f"Image with center line saved to {output_path}")
         else:
             print("No horizontal lines detected")
     except ValueError as e:

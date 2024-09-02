@@ -14,7 +14,6 @@ def get_next_file_number(directory):
     return max(numbers) + 1 if numbers else 0
 
 def detect_and_save_vertical(image_path, model_path="src/models/scale_detector.pt", output_dir="public/vertical_scales", add_padding=False):
-    # print(f"Processing image: {image_path}")
 
     model = YOLO(model_path)
     image = cv2.imread(image_path)
@@ -24,7 +23,6 @@ def detect_and_save_vertical(image_path, model_path="src/models/scale_detector.p
     detections = results[0].boxes.data.cpu().numpy()
 
     os.makedirs(output_dir, exist_ok=True)
-    # print(f"Output directory prepared: {output_dir}")
 
     vertical_scales = []
 
@@ -41,7 +39,7 @@ def detect_and_save_vertical(image_path, model_path="src/models/scale_detector.p
     for idx, (xmin, ymin, xmax, ymax) in enumerate(vertical_scales, start=next_file_number):
         # Don't need to add padding in vertical scale generally
         if add_padding:
-            padding = 15
+            padding = 30
             xmin = max(0, xmin - padding)
             xmax = min(image_rgb.shape[1], xmax + padding)
             ymin = max(0, ymin - padding)
@@ -51,13 +49,11 @@ def detect_and_save_vertical(image_path, model_path="src/models/scale_detector.p
 
         rect_image_path = os.path.join(output_dir, f'vertical_scale_{idx}.png')
         cv2.imwrite(rect_image_path, cv2.cvtColor(rect_image, cv2.COLOR_RGB2BGR))
-        # print(f"Saved vertical scale image: {rect_image_path}")
 
         plot_one_box([xmin, ymin, xmax, ymax], image_rgb, color=(0, 255, 0), line_thickness=2)
 
     output_path = os.path.join(output_dir, f'vertical_scale_annotated_{next_file_number}.png')
     cv2.imwrite(output_path, cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR))
-    # print(f"Saved annotated image with vertical scales: {output_path}")
 
     return True
 

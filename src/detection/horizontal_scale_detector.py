@@ -12,10 +12,11 @@ def detect_and_save_horizontal(image_path, model_path="src/models/scale_detector
     image = cv2.imread(image_path)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+    # Detect objects in the image using the YOLO model
     results = model(image_rgb)
     detections = results[0].boxes.data.cpu().numpy()
 
-    # Delete all the existing images and store newer detected ones
+    # Clear the output directory before saving new images
     if os.path.isdir(output_dir):
         for file in os.listdir(output_dir):
             file_path = os.path.join(output_dir, file)
@@ -29,12 +30,11 @@ def detect_and_save_horizontal(image_path, model_path="src/models/scale_detector
         xmin, ymin, xmax, ymax = map(int, xyxy)
         width, height = xmax - xmin, ymax - ymin
         
-        # Assume a scale is horizontal if its width is greater than its height
+        # Identify horizontal scales based on width being greater than height
         if width > height:
             horizontal_scales.append((xmin, ymin, xmax, ymax))
 
     for idx, (xmin, ymin, xmax, ymax) in enumerate(horizontal_scales):
-        # Adding padding horizontally for better processing later
         if add_padding:
             padding = 30
             xmin = max(0, xmin - padding)
@@ -45,10 +45,12 @@ def detect_and_save_horizontal(image_path, model_path="src/models/scale_detector
         rect_image_path = os.path.join(output_dir, f'horizontal_scale_{idx}.png')
         cv2.imwrite(rect_image_path, cv2.cvtColor(rect_image, cv2.COLOR_RGB2BGR))
 
+        # Annotate the original image with bounding boxes
         plot_one_box([xmin, ymin, xmax, ymax], image_rgb, color=(255, 0, 0), line_thickness=2)
 
+    # Save the annotated image showing all detected horizontal scales
     output_path = os.path.join(output_dir, 'horizontal_scale_annotated.png')
-    cv2.imwrite(output_path, cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR))
+    cv2.imwrite(output_path, cv2.COLOR_RGB2BGR)
 
     return True
 

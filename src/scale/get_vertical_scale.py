@@ -15,6 +15,7 @@ COLOR_RANGES = {
     "magenta": ((140, 50, 50), (170, 255, 255)),  # Magenta hue range
     "orange": ((10, 50, 50), (20, 255, 255)),  # Orange hue range
     "purple": ((130, 50, 50), (160, 255, 255)),  # Purple hue range
+    "black": ((0, 0, 0), (180, 255, 50)),  # Black hue range
 }
 
 def preprocess_image(image, color_name):
@@ -24,10 +25,15 @@ def preprocess_image(image, color_name):
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_bound, upper_bound = COLOR_RANGES[color_name.lower()]
     mask = cv2.inRange(hsv_image, lower_bound, upper_bound)
+    
+    if color_name.lower() == "black":
+        mask = cv2.bitwise_not(mask)  # Invert the mask for black to keep non-black areas
+
     result = cv2.bitwise_and(image, image, mask=mask)
     grayscale_result = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-    
+
     return grayscale_result, result
+
 
 def find_longest_vertical_line(processed_image, original_image, line_color):
     processed_image, _ = preprocess_image(original_image, line_color)
@@ -35,7 +41,7 @@ def find_longest_vertical_line(processed_image, original_image, line_color):
     lines = lsd.detect(processed_image)[0]
 
     if lines is None:
-        return None
+        return None, None
 
     debug_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 
@@ -56,10 +62,8 @@ def find_longest_vertical_line(processed_image, original_image, line_color):
         x1, y1, x2, y2 = longest_line
         cv2.line(debug_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-    debug_output_path = "detected_lines.png"
-    cv2.imwrite(debug_output_path, debug_image)
+    return longest_line, max_len 
 
-    return longest_line
 
 def detect_symbols(roi):
     # Use edge detection
@@ -77,22 +81,28 @@ def detect_symbols(roi):
 
 
 def get_vertical_scale(image_path, scale_color):
-    image_path = f"public/vertical_scales/{image_path}.png"
+    image_path = f"public/vertical_scales/vertical_scale_{image_path}.png"
     original_image = cv2.imread(image_path)
 
-    longest_line = find_longest_vertical_line(original_image, original_image, scale_color)
+    original_image = cv2.imread(image_path)
+
+    if original_image is None:
+        print("Something went wrong while reading the image")
+        return None
+
+    longest_line, line_length = find_longest_vertical_line(original_image, original_image, scale_color)
     
     grayscale_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
     grayscale_image = cv2.rotate(grayscale_image, cv2.ROTATE_90_CLOCKWISE)
     
-    line_length = None
     if longest_line:
         x1, y1, x2, y2 = longest_line
-        line_length = abs(y2 - y1)
-        
-        cv2.line(original_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv2.line(original_image, (x1, y1), (x2, y2), (0, 0, 255), 2)  # Highlight the longest line in the original image
         output_path = os.path.splitext(image_path)[0] + '_with_line.png'
         cv2.imwrite(output_path, original_image)
+
+    else:
+        print("No vertical line detected.")
     
     # Initialize EasyOCR reader
     reader = easyocr.Reader(['en'])
@@ -132,8 +142,6 @@ def get_vertical_scale(image_path, scale_color):
     output_text_path = os.path.splitext(image_path)[0] + '_with_text.png'
     cv2.imwrite(output_text_path, grayscale_image)
 
-    # print(f"The length of the longest line is: {line_length}")
-    # print(f"Detected Texts: {detected_texts}")
     return line_length, detected_texts
 
 
